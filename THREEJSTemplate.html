@@ -1,0 +1,102 @@
+﻿<!doctype html>
+<html>
+<head>
+<title>THREE Template</title>
+</head>
+
+<body>
+<script src="http://threejs.org/build/three.min.js"></script>
+<script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="http://threejs.org/examples/js/loaders/ColladaLoader.js"></script>
+<script>
+
+/********************GLOBALS**********************/
+
+	var scene    = new THREE.Scene();
+	var camera   = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+	var renderer = new THREE.WebGLRenderer();
+	var clock    = new THREE.Clock();
+	var lightStrength = 1;
+	var controls;
+	
+/********************SETUP************************/	
+
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0x3399ff);
+	document.body.appendChild(renderer.domElement);
+
+/********************CUSTOMIZATION****************/	
+
+	setCameraController("orbit");		//none, orbit ... more later
+	addCamera("0 15 -20");				//x y z
+	addLights("6,0,6,1 -6,0,-6,1");		//PointLights only. light1x,light1y,light1z,light1strength light2x,light2y,light2z,light2strength light3, ...
+	addFloor("rgb(10, 60, 10)");			//Color. If color == "" return null
+	//addJSON("models/snakeIII.json");	//.json source
+	//addSkyBox("images/sunny.png");		//image source
+	
+/**************CUSTOMIZATION FUNCTIONS************/
+
+	function setCameraController(whichController) {
+		if (whichController == "orbit") controls = new THREE.OrbitControls(camera);
+		
+		if (whichController == null || whichController == "none") controls.enabled = false;;
+	}
+	
+	function addCamera(position) {
+		var thisPosition = position.split(" ");
+		camera.position.set(thisPosition[0], thisPosition[1], thisPosition[2]);
+	}
+	
+	function addLights(lights) {
+		var thisLight = lights.split(" ");
+		for (var i=0;i<lights.length;i++) {
+			var lightPos = lights[i].split(","); 
+			var light = new THREE.PointLight(0xffffff, lightPos[3]);
+			light.position.set(lightPos[0],lightPos[1],lightPos[2]);
+			scene.add(light);
+		}
+	}
+	
+	function addFloor(color) {
+		if(color == "") return;
+		var geometry = new THREE.PlaneGeometry(50, 50);
+		var material = new THREE.MeshBasicMaterial( {color: color, side: THREE.DoubleSide} );
+		var plane = new THREE.Mesh( geometry, material );
+		plane.position.set(0,0,0);
+		plane.rotation.x=90;
+		scene.add( plane );
+	}
+	
+	function addJSON(src) {
+		if (src == null) return;
+		var loader = new THREE.JSONLoader();
+			loader.load(src, function(geometry, materials) {
+			var mesh = new THREE.SkinnedMesh(geometry, materials[0]);
+			scene.add(mesh);
+		});
+	}
+	
+	function addSkyBox(src) {
+		if (src == null) return;
+		var geometry = new THREE.SphereGeometry(50, 32, 32);
+		var texture = new THREE.TextureLoader().load(src);
+		var material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide}); 
+		var sky = new THREE.Mesh( geometry, material );
+		scene.add(sky);	
+	}
+	
+/******************ANIMATION LOOP*****************/
+	
+	function render(){
+		requestAnimationFrame(render);
+		var delta = clock.getDelta();
+
+		controls.update(delta);
+
+		renderer.render(scene, camera);
+	}	
+	
+	render();		
+</script>
+</body>
+</html>
